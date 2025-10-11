@@ -293,3 +293,5 @@ This project fulfills all requirements for **COMP229 - Assignment 2**:
 COMP229 - Web Application Development  
 Centennial College  
 Fall 2025
+
+
