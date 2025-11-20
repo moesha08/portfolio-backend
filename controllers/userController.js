@@ -1,12 +1,13 @@
 const User = require('../models/User');
 const createError = require('http-errors');
 
-// ------------------------------
+// ----------------------------------
 // GET ALL USERS
-// ------------------------------
+// ----------------------------------
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select('-__v').sort({ createdAt: -1 });
+    const users = await User.find().sort({ createdAt: -1 });
+
     res.json({
       success: true,
       count: users.length,
@@ -17,16 +18,14 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-// ------------------------------
+// ----------------------------------
 // GET USER BY ID
-// ------------------------------
+// ----------------------------------
 const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select('-__v');
+    const user = await User.findById(req.params.id);
 
-    if (!user) {
-      throw createError(404, 'User not found');
-    }
+    if (!user) throw createError(404, "User not found");
 
     res.json({
       success: true,
@@ -37,35 +36,29 @@ const getUserById = async (req, res, next) => {
   }
 };
 
-// ------------------------------
-// CREATE NEW USER (AUTO-GENERATE USERNAME)
-// ------------------------------
+// ----------------------------------
+// CREATE USER
+// ----------------------------------
 const createUser = async (req, res, next) => {
   try {
-    const { firstname, lastname, email } = req.body;
+    const { firstname, lastname, email, password } = req.body;
 
-    if (!firstname || !lastname || !email) {
-      throw createError(400, "Firstname, lastname, and email are required");
+    if (!firstname || !lastname || !email || !password) {
+      throw createError(400, "All fields are required");
     }
 
-    // Auto-generate username
-    const username =
-      `${firstname}.${lastname}`
-        .toLowerCase()
-        .replace(/\s+/g, '');
-
-    const user = new User({
-      username,
+    // Create new user
+    const user = await User.create({
+      firstname,
+      lastname,
       email,
-      role: "user"
+      password
     });
-
-    const savedUser = await user.save();
 
     res.status(201).json({
       success: true,
       message: "User created successfully",
-      data: savedUser
+      data: user
     });
 
   } catch (error) {
@@ -73,70 +66,62 @@ const createUser = async (req, res, next) => {
   }
 };
 
-// ------------------------------
+// ----------------------------------
 // UPDATE USER
-// ------------------------------
+// ----------------------------------
 const updateUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).select('-__v');
+    );
 
-    if (!user) {
-      throw createError(404, 'User not found');
-    }
+    if (!user) throw createError(404, "User not found");
 
     res.json({
       success: true,
-      message: 'User updated successfully',
+      message: "User updated successfully",
       data: user
     });
+
   } catch (error) {
     next(error);
   }
 };
 
-// ------------------------------
+// ----------------------------------
 // DELETE USER
-// ------------------------------
+// ----------------------------------
 const deleteUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
 
-    if (!user) {
-      throw createError(404, 'User not found');
-    }
+    if (!user) throw createError(404, "User not found");
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: "User deleted successfully"
     });
   } catch (error) {
     next(error);
   }
 };
 
-// ------------------------------
+// ----------------------------------
 // DELETE ALL USERS
-// ------------------------------
+// ----------------------------------
 const deleteAllUsers = async (req, res, next) => {
   try {
     await User.deleteMany();
-
     res.json({
       success: true,
-      message: 'All users deleted successfully'
+      message: "All users deleted successfully"
     });
   } catch (error) {
     next(error);
   }
 };
-
-// ------------------------------
-// EXPORT CONTROLLER
-// ------------------------------
 module.exports = {
   getAllUsers,
   getUserById,
